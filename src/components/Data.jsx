@@ -1,56 +1,39 @@
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc,
-  getDoc,
-  deleteDoc
-} from "firebase/firestore";
-import db from "../firebase/config";
 import React, { useEffect, useState } from "react";
+import { useFirestoreCollection } from "../fireStore";
 
-function Data() {
-  const [users, setUsers] = useState([]);
-  const usersRef = collection(db, "users");
+function Data({ collectionName }) {
+  const {
+    getDocuments,
+    addDocument,
+    updateDocument,
+    deleteDocument,
+  } = useFirestoreCollection(collectionName);
 
-  const getUsers = async () => {
-    const data = await getDocs(usersRef);
-    setUsers(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-  };
-
-  useEffect(() => {
-    getUsers();
-  });
-
+  const [documents, setDocuments] = useState([]);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
 
+  useEffect(() => {
+    getDocuments().then((data) => setDocuments(data));
+  }, [collectionName, getDocuments]);
+
+  const editDocument = async (documentId) => {
+    updateDocument(documentId);
+  };
+
+  const deleteDocumentById = async (documentId) => {
+    deleteDocument(documentId);
+  };
+
   const submitData = () => {
-    addDoc(usersRef, {
+    addDocument({
       name: name,
       age: Number(age),
-    })
-      .then(() => {
-        setName("");
-        setAge("");
-      })
-      .catch((error) => {
-        console.log("Error adding document:", error);
-      });
-  };
-
-  const editUser = async (userId) => {
-    const userDoc = doc(db, "users", userId);
-    const userSnap = await getDoc(userDoc);
-    await updateDoc(userDoc, {
-      age: userSnap.data().age + 1,
+    }).then(() => {
+      setName("");
+      setAge("");
     });
   };
-
-  const deleteUser = async (userId) =>{
-    await deleteDoc(doc(db, "users", userId));
-  }
 
   return (
     <>
@@ -68,17 +51,12 @@ function Data() {
       />
       <button onClick={() => submitData()}>Submit</button>
 
-      {users.map((user) => (
-        <div key={user.id}>
-          <div style={{display:'flex',gap:'5px'}}>
-            <h3>{user.name}</h3>
-            <h3>{user.age}</h3>
-          </div>
-          
-          <div style={{direction:'flex'}}>
-          <button onClick={() => editUser(user.id)}>Increase</button>
-          <button onClick={() => deleteUser(user.id)}>Delete</button>
-          </div>
+      {documents.map((document) => (
+        <div key={document.id}>
+          <h1>{document.name}</h1>
+          <h1>{document.age}</h1>
+          <button onClick={() => editDocument(document.id)}>Increase</button>
+          <button onClick={() => deleteDocumentById(document.id)}>Delete</button>
         </div>
       ))}
     </>

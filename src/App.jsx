@@ -4,7 +4,7 @@ function App() {
   return (
     <div className="App">
       <h1>FireBase Configure</h1>
-      <Data/>
+      <Data collectionName={"users"}/>
     </div>
   );
 }
